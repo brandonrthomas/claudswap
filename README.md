@@ -1,8 +1,8 @@
-# claudle
+# claudswap
 
 Switch Claude Code to any model — including the old ones `/model` doesn't show you.
 
-Claude Code's built-in `/model` picker only lists the models Anthropic currently promotes. But the API supports every model your account has access to, and `/model <exact-id>` still works if you know the ID. **claudle** bridges the gap: a `/switch` command that lists everything, resolves fuzzy aliases, and actually switches the running session.
+Claude Code's built-in `/model` picker only lists the models Anthropic currently promotes. But the API supports every model your account has access to, and `/model <exact-id>` still works if you know the ID. **claudswap** bridges the gap: a `/switch` command that lists everything, resolves fuzzy aliases, and actually switches the running session.
 
 **Why reach for an older model?** They aren't just cheaper or faster — they behave differently. If you tuned a prompt against a specific version, you're comparing behavior across versions, or you need to reproduce something a particular model did, "whatever is newest" is the wrong tool. The API keeps serving them; only the picker moved on.
 
@@ -12,39 +12,39 @@ Claude Code's live model is in-process state. No file, socket, or API can change
 
 ## The solution
 
-**claudle** is a transparent pty wrapper. It runs `claude` under a pseudo-terminal and exposes a FIFO. Anything inside the session can inject input by writing to the FIFO. The terminal is out of the equation — it works in VS Code, GNOME Terminal, Windows Terminal, Terminal.app, Alacritty, bare SSH, everywhere ptys exist.
+**claudswap** is a transparent pty wrapper. It runs `claude` under a pseudo-terminal and exposes a FIFO. Anything inside the session can inject input by writing to the FIFO. The terminal is out of the equation — it works in VS Code, GNOME Terminal, Windows Terminal, Terminal.app, Alacritty, bare SSH, everywhere ptys exist.
 
-For tmux, screen, and zellij users, `/switch` works without the wrapper — their APIs can target their own pane. claudle is the universal path for everything else.
+For tmux, screen, and zellij users, `/switch` works without the wrapper — their APIs can target their own pane. claudswap is the universal path for everything else.
 
 ## Install
 
 ```bash
-git clone https://github.com/brandonrthomas/claudle.git
-cd claudle
+git clone https://github.com/brandonrthomas/claudswap.git
+cd claudswap
 bash install.sh
 ```
 
 This puts:
-- `claudle` in `~/.local/bin/`
+- `claudswap` in `~/.local/bin/`
 - `switch-model.sh` in `~/.claude/scripts/`
 - `/switch` slash command in `~/.claude/commands/`
 
 ## Usage
 
-### Start a session with claudle
+### Start a session with claudswap
 
 ```bash
-claudle                  # same as: claude
-claudle -c               # same as: claude -c (resume)
-claudle --model opus     # same as: claude --model opus
-claudle --run bash       # wrap any command, not just claude
+claudswap                  # same as: claude
+claudswap -c               # same as: claude -c (resume)
+claudswap --model opus     # same as: claude --model opus
+claudswap --run bash       # wrap any command, not just claude
 ```
 
 Or make it the default:
 
 ```bash
 # add to .bashrc / .zshrc
-alias claude=claudle
+alias claude=claudswap
 ```
 
 ### /switch — list models
@@ -82,7 +82,7 @@ The switch fires the moment Claude's current turn ends.
 
 ## How it works
 
-1. **claudle** allocates a pty, runs `claude` on it, and mirrors I/O in raw mode (window resizes, signals, exit status — all transparent). It also opens a per-session FIFO at `$CLAUDLE_FIFO`.
+1. **claudswap** allocates a pty, runs `claude` on it, and mirrors I/O in raw mode (window resizes, signals, exit status — all transparent). It also opens a per-session FIFO at `$CLAUDSWAP_FIFO`.
 
 2. **/switch** fetches the full model list from `GET /v1/models` using the Claude Code OAuth token, resolves the user's input (number, alias, substring), and writes `/model <resolved-id>\r` to the FIFO.
 
@@ -90,9 +90,9 @@ The switch fires the moment Claude's current turn ends.
 
 ### Injection backends
 
-| Backend | When it's used | Needs claudle? |
+| Backend | When it's used | Needs claudswap? |
 |---------|---------------|----------------|
-| claudle | `$CLAUDLE_PID` in process ancestry | Yes |
+| claudswap | `$CLAUDSWAP_PID` in process ancestry | Yes |
 | tmux | `tmux` in process ancestry | No |
 | screen | `screen` in process ancestry | No |
 | zellij | `zellij` in process ancestry | No |
@@ -104,7 +104,7 @@ Backend detection walks the process tree (not env vars — those get inherited a
 
 `/switch` reads your Claude Code OAuth token from `~/.claude/.credentials.json` in order to call `GET /v1/models`. It is sent only to `api.anthropic.com` over HTTPS — the same endpoint Claude Code itself uses, and the only host this project contacts.
 
-The token is never printed, logged, or written to disk, and it is **never placed in a command line**. Passing a credential as a process argument would expose it through `/proc/<pid>/cmdline`, which any process running as you — and root — can read for the duration of the call. Instead it is piped to `curl` on stdin via `--config -`. The `claudle` wrapper never touches the token at all; it only moves bytes between your terminal and the pty.
+The token is never printed, logged, or written to disk, and it is **never placed in a command line**. Passing a credential as a process argument would expose it through `/proc/<pid>/cmdline`, which any process running as you — and root — can read for the duration of the call. Instead it is piped to `curl` on stdin via `--config -`. The `claudswap` wrapper never touches the token at all; it only moves bytes between your terminal and the pty.
 
 ## Requirements
 

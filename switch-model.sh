@@ -8,7 +8,7 @@
 # and executes it as a command when the turn ends.
 #
 # Injection backends (innermost layer wins via process-ancestry detection):
-#   claudle  Write to $CLAUDLE_FIFO — universal, works in ANY terminal, over ssh,
+#   claudswap  Write to $CLAUDSWAP_FIFO — universal, works in ANY terminal, over ssh,
 #            in VS Code, everywhere ptys exist. The recommended path.
 #   tmux     tmux send-keys -t "$TMUX_PANE"           (zero-setup fast path)
 #   screen   screen -S "$STY" -p "$WINDOW" -X stuff   (zero-setup fast path)
@@ -18,9 +18,9 @@
 # Most terminals (Alacritty, GNOME Terminal, Windows Terminal, VS Code, Terminal.app,
 # bare ssh) have no self-injection API, and the kernel one (TIOCSTI) is dead since
 # Linux 6.2. Rather than maintaining per-terminal backends (kitty, wezterm, konsole,
-# iTerm2, Ghostty — each with its own quirks), claudle solves the problem at the pty
+# iTerm2, Ghostty — each with its own quirks), claudswap solves the problem at the pty
 # layer: it owns the master side of the pty, so injection works regardless of terminal.
-# Start sessions with `claudle` (or alias claude=claudle) and /switch just works.
+# Start sessions with `claudswap` (or alias claude=claudswap) and /switch just works.
 #
 # Model list comes from GET /v1/models using the Claude Code OAuth token in
 # ~/.claude/.credentials.json. The token is read into a variable, handed to curl over
@@ -98,8 +98,8 @@ grouped_models() {
 # A tty comparison can't substitute for this — Claude Code runs tools with no
 # controlling terminal at all (`tty` says "not a tty", `ps -o tty=` says "?").
 #
-# The claudle pty wrapper is checked by PID ($CLAUDLE_PID) at every step, so a
-# wrapped session wins over any outer terminal — and a *stale* $CLAUDLE_FIFO inherited
+# The claudswap pty wrapper is checked by PID ($CLAUDSWAP_PID) at every step, so a
+# wrapped session wins over any outer terminal — and a *stale* $CLAUDSWAP_FIFO inherited
 # across a terminal boundary loses, because the walk hits that terminal first.
 
 # Portable process-tree helpers: /proc where it exists (Linux), ps elsewhere (macOS).
@@ -115,13 +115,13 @@ _comm() {
 detect_layer() {
   local pid=$$ depth=0 comm
   while [ "${pid:-0}" -gt 1 ] && [ "$depth" -lt 40 ]; do
-    if [ -n "${CLAUDLE_PID:-}" ] && [ "$pid" = "$CLAUDLE_PID" ]; then
-      echo claudle; return
+    if [ -n "${CLAUDSWAP_PID:-}" ] && [ "$pid" = "$CLAUDSWAP_PID" ]; then
+      echo claudswap; return
     fi
     comm=$(_comm "$pid")
     [ -n "$comm" ] || break
     case "$comm" in
-      claudle)       echo claudle; return ;;
+      claudswap)       echo claudswap; return ;;
       screen|SCREEN) echo screen;  return ;;
       tmux*)         echo tmux;    return ;;
       zellij)        echo zellij;  return ;;
@@ -140,10 +140,10 @@ detect_layer() {
 }
 
 # Injection backends. Each echoes its name on success, returns 1 on failure.
-_try_claudle() {
-  [ -n "${CLAUDLE_FIFO:-}" ] && [ -p "$CLAUDLE_FIFO" ] || return 1
-  printf '%s\r' "$1" > "$CLAUDLE_FIFO" 2>/dev/null \
-    && { echo claudle; return 0; }
+_try_claudswap() {
+  [ -n "${CLAUDSWAP_FIFO:-}" ] && [ -p "$CLAUDSWAP_FIFO" ] || return 1
+  printf '%s\r' "$1" > "$CLAUDSWAP_FIFO" 2>/dev/null \
+    && { echo claudswap; return 0; }
   return 1
 }
 _try_tmux() {
@@ -173,7 +173,7 @@ inject() {
   local payload="$1" layer
   layer=$(detect_layer)
   case "$layer" in
-    claudle) _try_claudle "$payload" && return 0 ;;
+    claudswap) _try_claudswap "$payload" && return 0 ;;
     tmux)    _try_tmux "$payload" && return 0 ;;
     screen)  _try_screen "$payload" && return 0 ;;
     zellij)  _try_zellij "$payload" && return 0 ;;
@@ -255,10 +255,10 @@ case "$cmd" in
       echo "NO_INJECTION_BACKEND: this terminal has no self-injection support."
       echo "Run this yourself:  /model $id"
       echo ""
-      echo "To make /switch work in any terminal, start sessions with claudle:"
-      echo "  claudle            # wraps claude with injection support"
-      echo "  claudle -c         # resume a session"
-      echo "  alias claude=claudle   # make it permanent"
+      echo "To make /switch work in any terminal, start sessions with claudswap:"
+      echo "  claudswap            # wraps claude with injection support"
+      echo "  claudswap -c         # resume a session"
+      echo "  alias claude=claudswap   # make it permanent"
       exit 4
     fi
     ;;

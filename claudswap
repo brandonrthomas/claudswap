@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-"""claudle — run claude (or any command) under a pty with an injection FIFO.
+"""claudswap — run claude (or any command) under a pty with an injection FIFO.
 
 Why: tools inside a Claude Code session (like /switch) sometimes need to type
 into the session's own input — e.g. to execute the built-in /model command,
 which can't be invoked any other way. Terminal-emulator remote-control APIs
 cover only a few terminals (tmux, screen, zellij, kitty, wezterm, konsole);
 most terminals (VS Code, GNOME Terminal, Windows Terminal, Terminal.app, bare
-ssh) have none. claudle removes the terminal from the equation: it owns the
+ssh) have none. claudswap removes the terminal from the equation: it owns the
 pty, so injection works everywhere ptys exist (Linux, macOS).
 
-How: claudle allocates a pty, runs the wrapped command on it, and transparently
+How: claudswap allocates a pty, runs the wrapped command on it, and transparently
 mirrors your real terminal <-> pty (raw mode, window resizes, exit status). It
 also listens on a per-session FIFO; bytes written there are fed to the pty as
-if typed. The FIFO path is exported to the child as $CLAUDLE_FIFO (plus
-$CLAUDLE_PID for ancestry validation), so anything inside the session can
+if typed. The FIFO path is exported to the child as $CLAUDSWAP_FIFO (plus
+$CLAUDSWAP_PID for ancestry validation), so anything inside the session can
 self-target precisely — no window IDs, no "current pane" ambiguity.
 
 Usage:
-  claudle [claude args...]        # wrap claude:  claudle -c, claudle --model ...
-  claudle --run CMD [ARGS...]     # wrap an arbitrary command instead of claude
+  claudswap [claude args...]        # wrap claude:  claudswap -c, claudswap --model ...
+  claudswap --run CMD [ARGS...]     # wrap an arbitrary command instead of claude
 
 Inject from inside the session:
-  printf '/model claude-opus-4-1-20250805\r' > "$CLAUDLE_FIFO"
+  printf '/model claude-opus-4-1-20250805\r' > "$CLAUDSWAP_FIFO"
 
 Not supported: Windows (no pty module; a ConPTY port would be needed).
 """
@@ -39,20 +39,20 @@ import tty
 try:
     import pty
 except ImportError:  # pragma: no cover
-    sys.stderr.write("claudle: this platform has no pty support\n")
+    sys.stderr.write("claudswap: this platform has no pty support\n")
     sys.exit(1)
 
 
 def runtime_dir():
     xdg = os.environ.get("XDG_RUNTIME_DIR")
-    d = os.path.join(xdg, "claudle") if xdg else "/tmp/claudle-%d" % os.getuid()
+    d = os.path.join(xdg, "claudswap") if xdg else "/tmp/claudswap-%d" % os.getuid()
     os.makedirs(d, mode=0o700, exist_ok=True)
     os.chmod(d, 0o700)
     return d
 
 
 def clean_stale(d):
-    """Remove FIFOs whose owning claudle process is gone (crash leftovers)."""
+    """Remove FIFOs whose owning claudswap process is gone (crash leftovers)."""
     try:
         names = os.listdir(d)
     except OSError:
@@ -123,8 +123,8 @@ def main():
     os.mkfifo(fifo, 0o600)
 
     # Child (and everything under it) sees these; /switch uses them to self-target.
-    os.environ["CLAUDLE_FIFO"] = fifo
-    os.environ["CLAUDLE_PID"] = str(os.getpid())
+    os.environ["CLAUDSWAP_FIFO"] = fifo
+    os.environ["CLAUDSWAP_PID"] = str(os.getpid())
 
     stdin_fd = 0
     stdin_tty = os.isatty(stdin_fd)
@@ -134,7 +134,7 @@ def main():
         try:
             os.execvp(cmd[0], cmd)
         except OSError as e:
-            sys.stderr.write("claudle: exec %s: %s\n" % (cmd[0], e))
+            sys.stderr.write("claudswap: exec %s: %s\n" % (cmd[0], e))
             os._exit(127)
 
     # Mirror the real terminal's size onto the pty; track future resizes.

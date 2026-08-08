@@ -23,7 +23,8 @@
 # Start sessions with `claudle` (or alias claude=claudle) and /switch just works.
 #
 # Model list comes from GET /v1/models using the Claude Code OAuth token in
-# ~/.claude/.credentials.json. The token is read into a variable and never printed.
+# ~/.claude/.credentials.json. The token is read into a variable, handed to curl over
+# stdin, and never printed, written to disk, or placed in any process's arguments.
 set -euo pipefail
 
 CRED="$HOME/.claude/.credentials.json"
@@ -32,8 +33,14 @@ fetch_models() {
   local tok
   tok=$(jq -r '.claudeAiOauth.accessToken // empty' "$CRED" 2>/dev/null)
   [ -n "$tok" ] || { echo "ERROR: no OAuth token in $CRED" >&2; return 1; }
-  curl -sf --max-time 15 "https://api.anthropic.com/v1/models?limit=100" \
-    -H "Authorization: Bearer $tok" \
+  # The token reaches curl on stdin (--config -), never as an argv element: process
+  # arguments are world-readable through /proc/<pid>/cmdline for the life of the call.
+  # printf is a shell builtin and a pipe is not a file, so the token touches neither
+  # argv nor disk. Do NOT switch this to a here-doc or here-string — bash stages both
+  # in a temp file. The value must be quoted — curl truncates unquoted config values
+  # at the first space, which fails open as a 401 rather than an obvious error.
+  printf 'header = "Authorization: Bearer %s"\n' "$tok" \
+  | curl -sf --max-time 15 --config - "https://api.anthropic.com/v1/models?limit=100" \
     -H "anthropic-version: 2023-06-01" \
     -H "anthropic-beta: oauth-2025-04-20" \
   | jq -r '.data[] | "\(.id)\t\(.display_name)\t\(.created_at[:10])"'
@@ -91,7 +98,7 @@ grouped_models() {
 # A tty comparison can't substitute for this — Claude Code runs tools with no
 # controlling terminal at all (`tty` says "not a tty", `ps -o tty=` says "?").
 #
-# The claudle pty wrapper (~/workspace/claudle) is checked by PID at every step, so a
+# The claudle pty wrapper is checked by PID ($CLAUDLE_PID) at every step, so a
 # wrapped session wins over any outer terminal — and a *stale* $CLAUDLE_FIFO inherited
 # across a terminal boundary loses, because the walk hits that terminal first.
 

@@ -19,12 +19,23 @@ For tmux, screen, and zellij users, `/switch` works without the wrapper — thei
 ## Install
 
 ```bash
+pip install claudswap
+claudswap install
+```
+
+`pip install` gives you the `claudswap` wrapper. `claudswap install` writes the `/switch` slash command and its backend into `~/.claude/` — run it once. (pip can't do that step itself; post-install hooks are unreliable and effectively deprecated.)
+
+<details>
+<summary>From source, without pip</summary>
+
+```bash
 git clone https://github.com/brandonrthomas/claudswap.git
 cd claudswap
 bash install.sh
 ```
+</details>
 
-This puts:
+Either route puts:
 - `claudswap` in `~/.local/bin/`
 - `switch-model.sh` in `~/.claude/scripts/`
 - `/switch` slash command in `~/.claude/commands/`
@@ -108,7 +119,7 @@ The token is never printed, logged, or written to disk, and it is **never placed
 
 ## Requirements
 
-- Python 3 (for the pty wrapper — standard library only, no pip)
+- Python 3.9+ (the pty wrapper is standard library only — no runtime dependencies)
 - `jq` and `curl` (for the API call)
 - Claude Code with an active OAuth session (`~/.claude/.credentials.json`)
 

@@ -1,0 +1,67 @@
+name: publish
+
+# Publishes to PyPI via Trusted Publishing (OIDC) — no API token exists anywhere.
+# Triggered by pushing a version tag:  git tag v0.1.0 && git push origin v0.1.0
+#
+# The PyPI publisher config must match THIS file's name (publish.yaml), the repo,
+# and the owner. If the publisher specifies an environment, add a matching
+# `environment:` key to the publish job or the OIDC exchange will be rejected.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build
+          twine check dist/*
+
+      # A bad upload to PyPI is permanent — that version number can never be
+      # reused. Prove the artifact actually works before it leaves the runner.
+      - name: Smoke-test the built wheel
+        run: |
+          python -m venv /tmp/venv
+          /tmp/venv/bin/pip install --quiet dist/*.whl
+          /tmp/venv/bin/claudswap --help > /dev/null
+          export HOME=/tmp/fakehome && mkdir -p "$HOME"
+          /tmp/venv/bin/claudswap install
+          test -x "$HOME/.claude/scripts/switch-model.sh"
+          test -f "$HOME/.claude/commands/switch.md"
+          # the placeholder must have been rewritten to a real absolute path
+          ! grep -q CLAUDSWAP_SCRIPT_PATH "$HOME/.claude/commands/switch.md"
+          echo "smoke test passed"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    # Must match the environment named in the PyPI publisher config exactly.
+    # Doubles as a manual gate: add required reviewers to this environment in
+    # repo settings and no publish can run without a human approving it.
+    environment: release
+    permissions:
+      id-token: write # required for Trusted Publishing
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@release/v1

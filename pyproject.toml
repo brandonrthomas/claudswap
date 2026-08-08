@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claudswap"
+dynamic = ["version"]
+description = "Switch Claude Code to any model — /switch command plus a transparent pty wrapper that makes it work in every terminal"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "Brandon Thomas", email = "brandon.thomas.r@gmail.com" }]
+keywords = ["claude", "claude-code", "cli", "pty", "model-switching", "anthropic"]
+# Standard library only, by design: the wrapper must not drag dependencies into
+# an environment it is merely wrapping.
+dependencies = []
+
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Environment :: Console",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: MacOS :: MacOS X",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Build Tools",
+  "Topic :: Terminals",
+  "Topic :: Utilities",
+]
+
+[project.urls]
+Homepage = "https://github.com/brandonrthomas/claudswap"
+Repository = "https://github.com/brandonrthomas/claudswap"
+Issues = "https://github.com/brandonrthomas/claudswap/issues"
+
+[project.scripts]
+claudswap = "claudswap.cli:main"
+
+[tool.hatch.version]
+path = "src/claudswap/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claudswap"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/claudswap", "install.sh", "README.md", "LICENSE", "pyproject.toml"]

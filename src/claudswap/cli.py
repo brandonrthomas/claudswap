@@ -17,6 +17,7 @@ $CLAUDSWAP_PID for ancestry validation), so anything inside the session can
 self-target precisely — no window IDs, no "current pane" ambiguity.
 
 Usage:
+  claudswap install                # write the /switch command into ~/.claude (run once)
   claudswap [claude args...]        # wrap claude:  claudswap -c, claudswap --model ...
   claudswap --run CMD [ARGS...]     # wrap an arbitrary command instead of claude
 
@@ -103,11 +104,73 @@ def write_all(fd, data):
         data = data[n:]
 
 
+def _data_dir():
+    """Locate the bundled switch-model.sh / switch.md, packaged or in a source tree."""
+    try:
+        from importlib.resources import files
+        p = files(__package__ or "claudswap") / "data"
+        if (p / "switch-model.sh").is_file():
+            return p
+    except Exception:
+        pass
+    cand = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
+    if os.path.isfile(os.path.join(cand, "switch-model.sh")):
+        return cand
+    return None
+
+
+def _read(data, name):
+    if isinstance(data, str):
+        with open(os.path.join(data, name)) as fh:
+            return fh.read()
+    return (data / name).read_text()
+
+
+def _write(path, text, mode):
+    # Write-then-rename so an interrupted install can't leave a half-written file
+    # that Claude Code would happily load.
+    tmp = path + ".tmp"
+    with open(tmp, "w") as fh:
+        fh.write(text)
+    os.chmod(tmp, mode)
+    os.replace(tmp, path)
+
+
+def do_install():
+    """Install the /switch slash command and its backend into ~/.claude."""
+    data = _data_dir()
+    if data is None:
+        sys.stderr.write("claudswap: bundled files missing; try "
+                         "`pip install --force-reinstall claudswap`\n")
+        return 1
+    script_dir = os.path.expanduser("~/.claude/scripts")
+    cmd_dir = os.path.expanduser("~/.claude/commands")
+    os.makedirs(script_dir, exist_ok=True)
+    os.makedirs(cmd_dir, exist_ok=True)
+
+    backend = os.path.join(script_dir, "switch-model.sh")
+    _write(backend, _read(data, "switch-model.sh"), 0o755)
+    print("  switch-model.sh -> %s" % backend)
+
+    slash = os.path.join(cmd_dir, "switch.md")
+    # switch.md ships with a placeholder because the backend's absolute path is
+    # only known at install time.
+    _write(slash, _read(data, "switch.md").replace("CLAUDSWAP_SCRIPT_PATH", backend), 0o644)
+    print("  switch.md -> %s" % slash)
+
+    print("\nDone. /switch is available in new Claude Code sessions.")
+    print("Start sessions with `claudswap` (or alias claude=claudswap) so it "
+          "works in any terminal.")
+    return 0
+
+
 def main():
     argv = sys.argv[1:]
     if argv and argv[0] in ("-h", "--help"):
         print(__doc__.strip())
         return 0
+    if argv and argv[0] == "install":
+        return do_install()
     if argv and argv[0] == "--run":
         cmd = argv[1:] or ["bash"]
     else:

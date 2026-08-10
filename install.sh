@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install claudswap + /switch for Claude Code.
+# Install claudswap + /swap for Claude Code.
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")" && pwd)"
@@ -19,16 +19,16 @@ mkdir -p "$SCRIPT_DIR"
 install -m 0755 "$REPO/src/claudswap/data/switch-model.sh" "$SCRIPT_DIR/switch-model.sh"
 echo "  switch-model.sh -> $SCRIPT_DIR/switch-model.sh"
 
-# 3. /switch slash command (rewrite placeholder path)
+# 3. /swap slash command (rewrite placeholder path)
 mkdir -p "$CMD_DIR"
-sed "s|CLAUDSWAP_SCRIPT_PATH|$SCRIPT_DIR/switch-model.sh|g" "$REPO/src/claudswap/data/switch.md" \
-  > "$CMD_DIR/switch.md"
-echo "  switch.md -> $CMD_DIR/switch.md"
+sed "s|CLAUDSWAP_SCRIPT_PATH|$SCRIPT_DIR/switch-model.sh|g" "$REPO/src/claudswap/data/swap.md" \
+  > "$CMD_DIR/swap.md"
+echo "  swap.md -> $CMD_DIR/swap.md"
 
 echo ""
 echo "Done. You now have:"
-echo "  /switch          — list + switch models from inside Claude Code"
-echo "  claudswap        — pty wrapper that makes /switch work in any terminal"
+echo "  /swap            — list + swap models from inside Claude Code"
+echo "  claudswap        — pty wrapper that makes /swap work in any terminal"
 echo ""
 
 # Check PATH

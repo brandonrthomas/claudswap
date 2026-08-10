@@ -105,7 +105,7 @@ def write_all(fd, data):
 
 
 def _data_dir():
-    """Locate the bundled switch-model.sh / switch.md, packaged or in a source tree."""
+    """Locate the bundled switch-model.sh / swap.md, packaged or in a source tree."""
     try:
         from importlib.resources import files
         p = files(__package__ or "claudswap") / "data"
@@ -137,7 +137,7 @@ def _write(path, text, mode):
 
 
 def do_install():
-    """Install the /switch slash command and its backend into ~/.claude."""
+    """Install the /swap slash command and its backend into ~/.claude."""
     data = _data_dir()
     if data is None:
         sys.stderr.write("claudswap: bundled files missing; try "
@@ -152,13 +152,13 @@ def do_install():
     _write(backend, _read(data, "switch-model.sh"), 0o755)
     print("  switch-model.sh -> %s" % backend)
 
-    slash = os.path.join(cmd_dir, "switch.md")
-    # switch.md ships with a placeholder because the backend's absolute path is
+    slash = os.path.join(cmd_dir, "swap.md")
+    # swap.md ships with a placeholder because the backend's absolute path is
     # only known at install time.
-    _write(slash, _read(data, "switch.md").replace("CLAUDSWAP_SCRIPT_PATH", backend), 0o644)
-    print("  switch.md -> %s" % slash)
+    _write(slash, _read(data, "swap.md").replace("CLAUDSWAP_SCRIPT_PATH", backend), 0o644)
+    print("  swap.md -> %s" % slash)
 
-    print("\nDone. /switch is available in new Claude Code sessions.")
+    print("\nDone. /swap is available in new Claude Code sessions.")
     print("Start sessions with `claudswap` (or alias claude=claudswap) so it "
           "works in any terminal.")
     return 0

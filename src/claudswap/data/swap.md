@@ -1,6 +1,6 @@
 ---
 description: List all available Claude models (incl. old ones /model hides) or actually switch the session to one
-argument-hint: "[number from /switch list, or model/alias — e.g. 3, 'opus 4.1', haiku]"
+argument-hint: "[number from /swap list, or model/alias — e.g. 3, 'opus 4.1', haiku]"
 allowed-tools: Bash(CLAUDSWAP_SCRIPT_PATH *), Bash(bash CLAUDSWAP_SCRIPT_PATH *)
 ---
 
@@ -8,7 +8,7 @@ User argument: "$ARGUMENTS"
 
 **If no argument was given** — list mode:
 1. Run: `bash CLAUDSWAP_SCRIPT_PATH list` (output: number, family, alias, ID, name, release date).
-2. Present the models grouped by family — one small table or section per family (Fable, Opus, Sonnet, Haiku), keeping the script's numbers and aliases exactly as given. Columns: #, alias, name, release date (show the full ID only if asked — the alias resolves it). Mark the model this session is currently running. Close with: "Switch with `/switch <number>` or `/switch <alias>` — or just reply with a number."
+2. Present the models grouped by family — one small table or section per family (Fable, Opus, Sonnet, Haiku), keeping the script's numbers and aliases exactly as given. Columns: #, alias, name, release date (show the full ID only if asked — the alias resolves it). Mark the current model with `← current` appended inside the release-date cell (not as an extra column — that breaks table rendering). Close with: "Switch with `/swap <number>` or `/swap <alias>` — or just reply with a number."
 3. If the user replies with a bare number (or alias) in the next message, run switch mode with it — the script resolves numbers against the same list.
 
 **If an argument was given** — switch mode:

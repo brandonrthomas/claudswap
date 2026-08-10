@@ -40,9 +40,9 @@ jobs:
           export HOME=/tmp/fakehome && mkdir -p "$HOME"
           /tmp/venv/bin/claudswap install
           test -x "$HOME/.claude/scripts/switch-model.sh"
-          test -f "$HOME/.claude/commands/switch.md"
+          test -f "$HOME/.claude/commands/swap.md"
           # the placeholder must have been rewritten to a real absolute path
-          ! grep -q CLAUDSWAP_SCRIPT_PATH "$HOME/.claude/commands/switch.md"
+          ! grep -q CLAUDSWAP_SCRIPT_PATH "$HOME/.claude/commands/swap.md"
           echo "smoke test passed"
 
       - uses: actions/upload-artifact@v4

@@ -2,7 +2,7 @@
 
 Switch Claude Code to any model — including the old ones `/model` doesn't show you.
 
-Claude Code's built-in `/model` picker only lists the models Anthropic currently promotes. But the API supports every model your account has access to, and `/model <exact-id>` still works if you know the ID. **claudswap** bridges the gap: a `/switch` command that lists everything, resolves fuzzy aliases, and actually switches the running session.
+Claude Code's built-in `/model` picker only lists the models Anthropic currently promotes. But the API supports every model your account has access to, and `/model <exact-id>` still works if you know the ID. **claudswap** bridges the gap: a `/swap` command that lists everything, resolves fuzzy aliases, and actually switches the running session.
 
 **Why reach for an older model?** They aren't just cheaper or faster — they behave differently. If you tuned a prompt against a specific version, you're comparing behavior across versions, or you need to reproduce something a particular model did, "whatever is newest" is the wrong tool. The API keeps serving them; only the picker moved on.
 
@@ -14,7 +14,7 @@ Claude Code's live model is in-process state. No file, socket, or API can change
 
 **claudswap** is a transparent pty wrapper. It runs `claude` under a pseudo-terminal and exposes a FIFO. Anything inside the session can inject input by writing to the FIFO. The terminal is out of the equation — it works in VS Code, GNOME Terminal, Windows Terminal, Terminal.app, Alacritty, bare SSH, everywhere ptys exist.
 
-For tmux, screen, and zellij users, `/switch` works without the wrapper — their APIs can target their own pane. claudswap is the universal path for everything else.
+For tmux, screen, and zellij users, `/swap` works without the wrapper — their APIs can target their own pane. claudswap is the universal path for everything else.
 
 ## Install
 
@@ -23,7 +23,7 @@ pip install claudswap
 claudswap install
 ```
 
-`pip install` gives you the `claudswap` wrapper. `claudswap install` writes the `/switch` slash command and its backend into `~/.claude/` — run it once. (pip can't do that step itself; post-install hooks are unreliable and effectively deprecated.)
+`pip install` gives you the `claudswap` wrapper. `claudswap install` writes the `/swap` slash command and its backend into `~/.claude/` — run it once. (pip can't do that step itself; post-install hooks are unreliable and effectively deprecated.)
 
 <details>
 <summary>From source, without pip</summary>
@@ -38,7 +38,7 @@ bash install.sh
 Either route puts:
 - `claudswap` in `~/.local/bin/`
 - `switch-model.sh` in `~/.claude/scripts/`
-- `/switch` slash command in `~/.claude/commands/`
+- `/swap` slash command in `~/.claude/commands/`
 
 ## Usage
 
@@ -58,9 +58,9 @@ Or make it the default:
 alias claude=claudswap
 ```
 
-### /switch — list models
+### /swap — list models
 
-Type `/switch` with no argument inside a Claude Code session. Example output — the real list is fetched live from the API, so yours will differ:
+Type `/swap` with no argument inside a Claude Code session. Example output — the real list is fetched live from the API, so yours will differ:
 
 ```
  #  alias       name                  released
@@ -80,13 +80,13 @@ Type `/switch` with no argument inside a Claude Code session. Example output —
 
 Numbers and aliases auto-update when Anthropic adds new models.
 
-### /switch — switch models
+### /swap — switch models
 
 ```
-/switch 2           → switches to model #2
-/switch opus        → switches to newest Opus
-/switch haiku       → switches to newest Haiku
-/switch opus 4.7    → switches to Opus 4.7
+/swap 2           → switches to model #2
+/swap opus        → switches to newest Opus
+/swap haiku       → switches to newest Haiku
+/swap opus 4.7    → switches to Opus 4.7
 ```
 
 The switch fires the moment Claude's current turn ends.
@@ -95,7 +95,7 @@ The switch fires the moment Claude's current turn ends.
 
 1. **claudswap** allocates a pty, runs `claude` on it, and mirrors I/O in raw mode (window resizes, signals, exit status — all transparent). It also opens a per-session FIFO at `$CLAUDSWAP_FIFO`.
 
-2. **/switch** fetches the full model list from `GET /v1/models` using the Claude Code OAuth token, resolves the user's input (number, alias, substring), and writes `/model <resolved-id>\r` to the FIFO.
+2. **/swap** fetches the full model list from `GET /v1/models` using the Claude Code OAuth token, resolves the user's input (number, alias, substring), and writes `/model <resolved-id>\r` to the FIFO.
 
 3. Claude Code sees `/model ...` as typed input, queued during the current turn. When the turn ends, it executes — switching the live model.
 
@@ -113,7 +113,7 @@ Backend detection walks the process tree (not env vars — those get inherited a
 
 ## Credentials
 
-`/switch` reads your Claude Code OAuth token from `~/.claude/.credentials.json` in order to call `GET /v1/models`. It is sent only to `api.anthropic.com` over HTTPS — the same endpoint Claude Code itself uses, and the only host this project contacts.
+`/swap` reads your Claude Code OAuth token from `~/.claude/.credentials.json` in order to call `GET /v1/models`. It is sent only to `api.anthropic.com` over HTTPS — the same endpoint Claude Code itself uses, and the only host this project contacts.
 
 The token is never printed, logged, or written to disk, and it is **never placed in a command line**. Passing a credential as a process argument would expose it through `/proc/<pid>/cmdline`, which any process running as you — and root — can read for the duration of the call. Instead it is piped to `curl` on stdin via `--config -`. The `claudswap` wrapper never touches the token at all; it only moves bytes between your terminal and the pty.
 

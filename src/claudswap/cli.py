@@ -19,6 +19,7 @@ self-target precisely — no window IDs, no "current pane" ambiguity.
 Usage:
   claudswap install                # write the /switch command into ~/.claude (run once)
   claudswap [claude args...]        # wrap claude:  claudswap -c, claudswap --model ...
+  claudswap --200k [claude args...] # launch with 200K context instead of 1M
   claudswap --run CMD [ARGS...]     # wrap an arbitrary command instead of claude
 
 Inject from inside the session:
@@ -171,10 +172,17 @@ def main():
         return 0
     if argv and argv[0] == "install":
         return do_install()
+    compact = False
+    if argv and argv[0] == "--200k":
+        compact = True
+        argv = argv[1:]
     if argv and argv[0] == "--run":
         cmd = argv[1:] or ["bash"]
     else:
         cmd = ["claude"] + argv
+
+    if compact:
+        os.environ["CLAUDE_CODE_DISABLE_1M_CONTEXT"] = "1"
 
     rdir = runtime_dir()
     clean_stale(rdir)
@@ -185,9 +193,9 @@ def main():
         pass
     os.mkfifo(fifo, 0o600)
 
-    # Child (and everything under it) sees these; /switch uses them to self-target.
     os.environ["CLAUDSWAP_FIFO"] = fifo
     os.environ["CLAUDSWAP_PID"] = str(os.getpid())
+    os.environ["CLAUDSWAP_CONTEXT"] = "200k" if compact else "1m"
 
     stdin_fd = 0
     stdin_tty = os.isatty(stdin_fd)

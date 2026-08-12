@@ -8,7 +8,7 @@ User argument: "$ARGUMENTS"
 
 **If no argument was given** — list mode:
 1. Run: `bash CLAUDSWAP_SCRIPT_PATH list` (output: number, family, alias, ID, name, release date).
-2. Present the models grouped by family — one small table or section per family (Fable, Opus, Sonnet, Haiku), keeping the script's numbers and aliases exactly as given. Columns: #, alias, name, release date (show the full ID only if asked — the alias resolves it). Mark the current model with `← current` appended inside the release-date cell (not as an extra column — that breaks table rendering). Close with: "Switch with `/swap <number>` or `/swap <alias>` — or just reply with a number."
+2. Present the models grouped by family — one small table or section per family (Fable, Opus, Sonnet, Haiku), keeping the script's numbers and aliases exactly as given. Columns: #, alias, name, release date (show the full ID only if asked — the alias resolves it). Mark the current model with `← current` appended inside the release-date cell (not as an extra column — that breaks table rendering). If the env var `$CLAUDSWAP_CONTEXT` is set, show the context mode before the table (e.g. "Context: 1M" or "Context: 200K — launched with `--200k`"). Close with: "Switch with `/swap <number>` or `/swap <alias>` — or just reply with a number."
 3. If the user replies with a bare number (or alias) in the next message, run switch mode with it — the script resolves numbers against the same list.
 
 **If an argument was given** — switch mode:

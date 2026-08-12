@@ -48,6 +48,7 @@ Either route puts:
 claudswap                  # same as: claude
 claudswap -c               # same as: claude -c (resume)
 claudswap --model opus     # same as: claude --model opus
+claudswap --200k           # launch with 200K context instead of 1M
 claudswap --run bash       # wrap any command, not just claude
 ```
 
@@ -63,37 +64,32 @@ alias claude=claudswap
 Type `/swap` with no argument inside a Claude Code session. Example output — the real list is fetched live from the API, so yours will differ:
 
 ```
- #  alias          name                   released
-── Fable ────────────────────────────────────────────
- 1  fable          Claude Fable 5         2026-06-07
-── Opus ─────────────────────────────────────────────
- 2  opus           Claude Opus 5          2026-07-24
- 3  opus[1m]       Claude Opus 5 [1M]     2026-07-24
- 4  opus-4.8       Claude Opus 4.8        2026-05-28
- 5  opus-4.8[1m]   Claude Opus 4.8 [1M]   2026-05-28
- 6  opus-4.7       Claude Opus 4.7        2026-04-14
- 7  opus-4.7[1m]   Claude Opus 4.7 [1M]   2026-04-14
- 8  opus-4.6       Claude Opus 4.6        2026-02-04  ← current
- 9  opus-4.6[1m]   Claude Opus 4.6 [1M]   2026-02-04
-10  opus-4.5       Claude Opus 4.5        2025-11-24
-── Sonnet ───────────────────────────────────────────
-11  sonnet         Claude Sonnet 5        2026-06-29
-12  sonnet[1m]     Claude Sonnet 5 [1M]   2026-06-29
+Context: 1M
+
+ #  alias       name                  released
+── Fable ─────────────────────────────────────
+ 1  fable       Claude Fable 5        2026-06-07
+── Opus ──────────────────────────────────────
+ 2  opus        Claude Opus 5         2026-07-24
+ 3  opus-4.8    Claude Opus 4.8       2026-05-28
+ 4  opus-4.7    Claude Opus 4.7       2026-04-14
+ 5  opus-4.6    Claude Opus 4.6       2026-02-04  ← current
+ 6  opus-4.5    Claude Opus 4.5       2025-11-24
+── Sonnet ────────────────────────────────────
  ...
-── Haiku ────────────────────────────────────────────
+── Haiku ─────────────────────────────────────
  ...
 ```
 
-Numbers and aliases auto-update when Anthropic adds new models. Models that support extended context have a `[1m]` variant (1 million tokens) listed alongside the standard version.
+Numbers and aliases auto-update when Anthropic adds new models. When launched with `claudswap --200k`, the context mode shows "200K" instead of "1M".
 
 ### /swap — switch models
 
 ```
-/swap 2              → switches to model #2
-/swap opus           → switches to newest Opus
-/swap haiku          → switches to newest Haiku
-/swap opus 4.7       → switches to Opus 4.7
-/swap opus-4.6[1m]   → switches to Opus 4.6 with 1M context
+/swap 2           → switches to model #2
+/swap opus        → switches to newest Opus
+/swap haiku       → switches to newest Haiku
+/swap opus 4.7    → switches to Opus 4.7
 ```
 
 The switch fires the moment Claude's current turn ends.

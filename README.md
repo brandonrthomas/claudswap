@@ -48,7 +48,7 @@ Either route puts:
 claudswap                  # same as: claude
 claudswap -c               # same as: claude -c (resume)
 claudswap --model opus     # same as: claude --model opus
-claudswap --200k           # launch with 200K context instead of 1M
+claudswap --200k           # use 200K context on models that support it
 claudswap --run bash       # wrap any command, not just claude
 ```
 

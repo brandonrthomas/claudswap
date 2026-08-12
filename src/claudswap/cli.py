@@ -19,7 +19,7 @@ self-target precisely — no window IDs, no "current pane" ambiguity.
 Usage:
   claudswap install                # write the /switch command into ~/.claude (run once)
   claudswap [claude args...]        # wrap claude:  claudswap -c, claudswap --model ...
-  claudswap --200k [claude args...] # launch with 200K context instead of 1M
+  claudswap --200k [claude args...] # use 200K context on models that support it
   claudswap --run CMD [ARGS...]     # wrap an arbitrary command instead of claude
 
 Inject from inside the session:

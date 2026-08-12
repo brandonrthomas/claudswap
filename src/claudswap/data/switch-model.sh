@@ -83,6 +83,14 @@ grouped_models() {
           if (j == 1 && fam != "other") alias = fam               # newest in family
           else if (ver != "") alias = fam "-" ver
           print n "\t" fam "\t" alias "\t" f[1] "\t" f[2] "\t" f[3]
+          # Emit a [1m] variant for models that support extended context.
+          # Eligible: opus (4.6+) and sonnet (5+). The [1m] suffix is a Claude Code
+          # convention — append it to the model ID and /model treats it as 1M context.
+          if ((fam == "opus" && f[1] !~ /opus-4-5/) || \
+              (fam == "sonnet" && f[1] !~ /sonnet-4/)) {
+            n++
+            print n "\t" fam "\t" alias "[1m]\t" f[1] "[1m]\t" f[2] " [1M]\t" f[3]
+          }
         }
       }
     }'
